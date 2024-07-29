@@ -2227,10 +2227,12 @@ void CustomTrainerPartyAssignMoves(struct Pokemon *mon, const struct TrainerMon 
 {
     bool32 noMoveSet = TRUE;
     u32 j;
+    u16 moves[MAX_MON_MOVES];
 
     for (j = 0; j < MAX_MON_MOVES; ++j)
     {
-        if (partyEntry->moves[j] != MOVE_NONE)
+        moves[j] = CheckShadowDataSubstitution(partyEntry, MON_DATA_MOVE1 + j);
+        if (moves[j] != MOVE_NONE)
             noMoveSet = FALSE;
     }
     if (noMoveSet)
@@ -2241,9 +2243,168 @@ void CustomTrainerPartyAssignMoves(struct Pokemon *mon, const struct TrainerMon 
 
     for (j = 0; j < MAX_MON_MOVES; ++j)
     {
-        SetMonData(mon, MON_DATA_MOVE1 + j, &partyEntry->moves[j]);
-        SetMonData(mon, MON_DATA_PP1 + j, &gMovesInfo[partyEntry->moves[j]].pp);
+        SetMonData(mon, MON_DATA_MOVE1 + j, moves[j]);
+        SetMonData(mon, MON_DATA_PP1 + j, &gMovesInfo[moves[j]].pp);
     }
+}
+
+u32 CheckShadowDataSubstitution(struct TrainerMon *partyData, u32 field)
+{
+    
+    u32 retVal;
+    u16 heartGauge, heartMax, purifyMove;
+    u8 shadowID, i, j;
+
+    
+    // TODO: Make sure it checks if a Shadow Pokemon has already been snagged before substitution
+    if (partyData->isShadow)
+    {
+        if (!&partyData->shadowID)
+            shadowID = SHADOW_LIST_GENERIC_1;
+        else
+            shadowID = &partyData->shadowID;
+    }
+
+    struct TrainerMon *shadowData = &gShadowTrainerMon[shadowID];
+
+    //Heart Gauge value must be calculated before switch statement, so that it can be used to determine moves as well. Prioritizes Heart Gauge value from Trainer Party first, then from Shadow Data.
+    
+    heartMax = GetShadowMonConstants(shadowID, MON_DATA_HEART_MAX);
+    if (partyData->heartGauge)
+        heartGauge = partyData->heartGauge;
+    else if (shadowData->heartGauge)
+        heartGauge = shadowData->heartGauge;
+    else
+        heartGauge = heartMax;
+
+    //All other data fields prioritize Shadow Data over Trainer Party data.
+    switch (field)
+    {
+        case MON_DATA_FRIENDSHIP:
+        retVal = 0;// Shadow Pokemon don't gain friendship until they're purified, so they will never have friendship if on the enemy's team.
+        break;
+
+        case MON_DATA_SHADOW_ID:
+        retVal = shadowID;
+        break;
+        
+        case MON_DATA_SPECIES:
+        if (shadowData->species)
+            retVal = shadowData->species;
+        else
+            retVal = partyData->species;
+        break;
+        
+        case MON_DATA_HELD_ITEM:
+        if (shadowData->heldItem)
+            retVal = shadowData->heldItem;
+        else
+            retVal = partyData->heldItem;
+        break;
+        
+        case MON_DATA_ABILITY_NUM:
+        if (shadowData->ability)
+            retVal = shadowData->ability;
+        else
+            retVal = partyData->ability;
+        break;
+        
+        case MON_DATA_POKEBALL:
+        if (shadowData->ball)
+            retVal = shadowData->ball;
+        else
+            retVal = partyData->ball;
+        break;
+        
+        case MON_DATA_LEVEL:
+        if (shadowData->lvl)
+            retVal = shadowData->lvl;
+        else
+            retVal = partyData->lvl;
+        break;
+        
+        case MON_DATA_NATURE:
+        if (shadowData->nature)
+            retVal = shadowData->nature;
+        else
+            retVal = partyData->nature;
+        break;
+        
+        case MON_DATA_GENDER:
+        if (shadowData->gender)
+            retVal = shadowData->gender;
+        else
+            retVal = partyData->gender;
+        break;
+        
+        case MON_DATA_IS_SHINY:
+        if (shadowData->isShiny)
+            retVal = shadowData->isShiny;
+        else
+            retVal = partyData->isShiny;
+        break;
+        
+        //Shadow Pokemon should not Dynamax or Terastallize, but related data can still be specified for after purification.
+        case MON_DATA_DYNAMAX_LEVEL: 
+        if (shadowData->dynamaxLevel)
+            retVal = shadowData->dynamaxLevel;
+        else
+            retVal = partyData->dynamaxLevel;
+        break;
+        
+        case MON_DATA_GIGANTAMAX_FACTOR: 
+        if (shadowData->gigantamaxFactor)
+            retVal = shadowData->gigantamaxFactor;
+        else
+            retVal = partyData->gigantamaxFactor;
+        break;
+        
+        case MON_DATA_TERA_TYPE: 
+        if (shadowData->teraType)
+            retVal = shadowData->teraType;
+        else
+            retVal = partyData->teraType;
+        break;
+        
+        case MON_DATA_HEART_VALUE: 
+        retVal = heartGauge;
+        break;
+
+        // Shadow Pokemon should always have at least one Shadow Move.
+        case MON_DATA_MOVE1:
+        if (shadowData->moves[0])
+            retVal = shadowData->moves[0];
+        else if (partyData->isShadow)
+            retVal = MOVE_SHADOW_BLITZ; 
+        else
+            retVal = partyData->moves[0];
+        break;
+
+        //Additional moveslots are determined depending on Heart Gauge, if not specified with Shadow Moves
+        case MON_DATA_MOVE2:
+        case MON_DATA_MOVE3:
+        case MON_DATA_MOVE4:
+        i = field - MON_DATA_MOVE1;
+        purifyMove = GetShadowMonConstants(shadowID, MON_DATA_PURIFY_MOVE_1 + i);
+        if (shadowData->moves[i])
+            retVal = shadowData->moves[i];
+        else if (partyData->isShadow)
+        {
+            j = 5 - GetHeartGaugeSection(heartGauge, heartMax);
+            if (i < j)
+                if (purifyMove)
+                    retVal = purifyMove;
+                else
+                    retVal = partyData->moves[i];
+            else
+            retVal = MOVE_NONE;
+        }
+        else
+            retVal = partyData->moves[i];
+        
+    }
+
+    return retVal;
 }
 
 u8 CreateNPCTrainerPartyFromTrainer(struct Pokemon *party, const struct Trainer *trainer, bool32 firstTrainer, u32 battleTypeFlags)
@@ -2278,7 +2439,10 @@ u8 CreateNPCTrainerPartyFromTrainer(struct Pokemon *party, const struct Trainer 
             const struct TrainerMon *partyData = trainer->party;
             u32 otIdType = OT_ID_RANDOM_NO_SHINY;
             u32 fixedOtId = 0;
-            u32 ability = 0;
+            u32 ability, customAbility = 0;
+            u32 iv;
+            u16 species, heldItem, heartGauge;
+            u8 gender, lvl, friendship, nature, isShiny, dynamaxLevel, gigantamaxFactor, teraType, shadowID, customBall;
 
             if (trainer->doubleBattle == TRUE)
                 personalityValue = 0x80;
@@ -2287,27 +2451,44 @@ u8 CreateNPCTrainerPartyFromTrainer(struct Pokemon *party, const struct Trainer 
             else
                 personalityValue = 0x88; // Use personality more likely to result in a male Pokémon
 
+            // Determines whether there is a Shadow Pokemon to substitute data from, and what pieces of data are available to substitute.
+            shadowID = CheckShadowDataSubstitution(&partyData[i], MON_DATA_SHADOW_ID);
+            species = CheckShadowDataSubstitution(&partyData[i], MON_DATA_SPECIES);
+            heldItem = CheckShadowDataSubstitution(&partyData[i], MON_DATA_HELD_ITEM);
+            iv = CheckShadowDataSubstitution(&partyData[i], MON_DATA_IVS);
+            gender = CheckShadowDataSubstitution(&partyData[i], MON_DATA_GENDER);
+            lvl = CheckShadowDataSubstitution(&partyData[i], MON_DATA_LEVEL);
+            friendship = CheckShadowDataSubstitution(&partyData[i], MON_DATA_FRIENDSHIP);
+            nature = CheckShadowDataSubstitution(&partyData[i], MON_DATA_NATURE);
+            isShiny = CheckShadowDataSubstitution(&partyData[i], MON_DATA_IS_SHINY);
+            dynamaxLevel = CheckShadowDataSubstitution(&partyData[i], MON_DATA_DYNAMAX_LEVEL);
+            gigantamaxFactor = CheckShadowDataSubstitution(&partyData[i], MON_DATA_GIGANTAMAX_FACTOR);
+            teraType = CheckShadowDataSubstitution(&partyData[i], MON_DATA_TERA_TYPE);
+            heartGauge = CheckShadowDataSubstitution(&partyData[i], MON_DATA_HEART_VALUE);
+            customAbility = CheckShadowDataSubstitution(&partyData[i], MON_DATA_ABILITY_NUM);
+            customBall = CheckShadowDataSubstitution(&partyData[i], MON_DATA_POKEBALL);
+
             personalityValue += personalityHash << 8;
-            if (partyData[i].gender == TRAINER_MON_MALE)
-                personalityValue = (personalityValue & 0xFFFFFF00) | GeneratePersonalityForGender(MON_MALE, partyData[i].species);
-            else if (partyData[i].gender == TRAINER_MON_FEMALE)
-                personalityValue = (personalityValue & 0xFFFFFF00) | GeneratePersonalityForGender(MON_FEMALE, partyData[i].species);
-            else if (partyData[i].gender == TRAINER_MON_RANDOM_GENDER)
-                personalityValue = (personalityValue & 0xFFFFFF00) | GeneratePersonalityForGender(Random() & 1 ? MON_MALE : MON_FEMALE, partyData[i].species);
-            ModifyPersonalityForNature(&personalityValue, partyData[i].nature);
-            if (partyData[i].isShadow)
+            if (gender == TRAINER_MON_MALE)
+                personalityValue = (personalityValue & 0xFFFFFF00) | GeneratePersonalityForGender(MON_MALE, species);
+            else if (gender == TRAINER_MON_FEMALE)
+                personalityValue = (personalityValue & 0xFFFFFF00) | GeneratePersonalityForGender(MON_FEMALE, species);
+            else if (gender == TRAINER_MON_RANDOM_GENDER)
+                personalityValue = (personalityValue & 0xFFFFFF00) | GeneratePersonalityForGender(Random() & 1 ? MON_MALE : MON_FEMALE, species);
+            ModifyPersonalityForNature(&personalityValue, nature);
+            if (shadowID)
                 otIdType = OT_ID_PLAYER_ID;
-            else if (partyData[i].isShiny)
+            else if (isShiny)
             {
                 otIdType = OT_ID_PRESET;
                 fixedOtId = HIHALF(personalityValue) ^ LOHALF(personalityValue);
             }
-            CreateMon(&party[i], partyData[i].species, partyData[i].lvl, 0, TRUE, personalityValue, otIdType, fixedOtId);
-            SetMonData(&party[i], MON_DATA_HELD_ITEM, &partyData[i].heldItem);
+            CreateMon(&party[i], species, lvl, 0, TRUE, personalityValue, otIdType, fixedOtId);
+            SetMonData(&party[i], MON_DATA_HELD_ITEM, heldItem);
 
             CustomTrainerPartyAssignMoves(&party[i], &partyData[i]);
-            SetMonData(&party[i], MON_DATA_IVS, &(partyData[i].iv));
-            if (partyData[i].ev != NULL)
+            SetMonData(&party[i], MON_DATA_IVS, &iv);
+            if ((partyData[i].ev != NULL) && !shadowID)
             {
                 SetMonData(&party[i], MON_DATA_HP_EV, &(partyData[i].ev[0]));
                 SetMonData(&party[i], MON_DATA_ATK_EV, &(partyData[i].ev[1]));
@@ -2316,13 +2497,13 @@ u8 CreateNPCTrainerPartyFromTrainer(struct Pokemon *party, const struct Trainer 
                 SetMonData(&party[i], MON_DATA_SPDEF_EV, &(partyData[i].ev[4]));
                 SetMonData(&party[i], MON_DATA_SPEED_EV, &(partyData[i].ev[5]));
             }
-            if (partyData[i].ability != ABILITY_NONE)
+            if (customAbility != ABILITY_NONE)
             {
-                const struct SpeciesInfo *speciesInfo = &gSpeciesInfo[partyData[i].species];
+                const struct SpeciesInfo *speciesInfo = &gSpeciesInfo[species];
                 u32 maxAbilities = ARRAY_COUNT(speciesInfo->abilities);
                 for (ability = 0; ability < maxAbilities; ++ability)
                 {
-                    if (speciesInfo->abilities[ability] == partyData[i].ability)
+                    if (speciesInfo->abilities[ability] == customAbility)
                         break;
                 }
                 if (ability >= maxAbilities)
@@ -2330,7 +2511,7 @@ u8 CreateNPCTrainerPartyFromTrainer(struct Pokemon *party, const struct Trainer 
             }
             else if (B_TRAINER_MON_RANDOM_ABILITY)
             {
-                const struct SpeciesInfo *speciesInfo = &gSpeciesInfo[partyData[i].species];
+                const struct SpeciesInfo *speciesInfo = &gSpeciesInfo[species];
                 ability = personalityHash % 3;
                 while (speciesInfo->abilities[ability] == ABILITY_NONE)
                 {
@@ -2338,47 +2519,46 @@ u8 CreateNPCTrainerPartyFromTrainer(struct Pokemon *party, const struct Trainer 
                 }
             }
             SetMonData(&party[i], MON_DATA_ABILITY_NUM, &ability);
-            SetMonData(&party[i], MON_DATA_FRIENDSHIP, &(partyData[i].friendship));
-            if (partyData[i].ball != ITEM_NONE)
+            SetMonData(&party[i], MON_DATA_FRIENDSHIP, &(friendship));
+            if (customBall != ITEM_NONE)
             {
-                ball = partyData[i].ball;
+                ball = customBall;
                 SetMonData(&party[i], MON_DATA_POKEBALL, &ball);
             }
             
             levelBoost = 0;
-            if (partyData[i].isShadow)
+            if (shadowID)
             {
                 bool8 isShadow = TRUE;
                 bool8 reverseMode = FALSE;
                 bool8 snagFlag = FALSE;
-                u8 shadowID = SHADOW_LIST_GENERIC_1; //Placeholder until dynamic Shadow List switching is implemented
                 SetMonData(&party[i], MON_DATA_IS_SHADOW, &isShadow);
                 SetMonData(&party[i], MON_DATA_SHADOW_ID, &shadowID);
                 SetMonData(&party[i], MON_DATA_REVERSE_MODE, &reverseMode);
                 SetMonData(&party[i], MON_DATA_SNAGGED, &snagFlag);
-                SetMonData(&party[i], MON_DATA_HEART_VALUE, &partyData[i].heartGauge);
-                levelBoost = GetMonData(&party[i], MON_DATA_BOOST_LEVEL);
+                SetMonData(&party[i], MON_DATA_HEART_VALUE, heartGauge);
+                levelBoost = GetShadowMonInfo(&shadowID, MON_DATA_BOOST_LEVEL);
             }
             else if (partyData[i].nickname != NULL)
             {
                 SetMonData(&party[i], MON_DATA_NICKNAME, partyData[i].nickname);
             }
-            if (partyData[i].isShiny)
+            if (isShiny)
             {
                 u32 data = TRUE;
                 SetMonData(&party[i], MON_DATA_IS_SHINY, &data);
             }
-            if (partyData[i].dynamaxLevel > 0)
+            if (dynamaxLevel > 0)
             {
                 u32 data = partyData[i].dynamaxLevel;
                 SetMonData(&party[i], MON_DATA_DYNAMAX_LEVEL, &data);
             }
-            if (partyData[i].gigantamaxFactor)
+            if (gigantamaxFactor)
             {
                 u32 data = partyData[i].gigantamaxFactor;
                 SetMonData(&party[i], MON_DATA_GIGANTAMAX_FACTOR, &data);
             }
-            if (partyData[i].teraType > 0)
+            if (teraType > 0)
             {
                 u32 data = partyData[i].teraType;
                 SetMonData(&party[i], MON_DATA_TERA_TYPE, &data);

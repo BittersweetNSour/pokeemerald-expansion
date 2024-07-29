@@ -25,7 +25,9 @@ enum {
     MON_DATA_CHECKSUM,
     MON_DATA_HP,
     MON_DATA_IS_SHINY,
+    MON_DATA_NATURE,
     MON_DATA_HIDDEN_NATURE,
+    MON_DATA_GENDER,
     MON_DATA_HP_LOST,
     MON_DATA_ENCRYPT_SEPARATOR,
     MON_DATA_NICKNAME,
@@ -257,14 +259,12 @@ union __attribute__((packed, aligned(2))) NicknameShadowdata
     {
     /* 0x00 */ u8 shadowID; //Identifies the Pokemon on the Shadow List; since many properties of Shadows are constants, they can simply be looked up in the list rather than stored in this union.
     /* 0x01 */ u16 heartValue; //The current Heart Gauge value; the maximum is a constant, so it does not need to be stored here.
-    /* 0x03 */ u8 isReverse:1; //Reverse Mode status.
-    /* 0x03 */ u8 snagFlag:1; //Set when catching from another trainer, so that the mon is given to you after winning. Unset afterward.
-    /* 0x03 */ u8 filler:6;
-    /* 0x04 */ 
-    /* 0x05 */ 
-    /* 0x06 */ 
-    /* 0x07 */ 
-    /* 0x08 */ 
+    /* 0x03 */ u8 accumulatedFriendship; //Friendship gained is stored here, and then given to the Pokemon after purification.
+    /* 0x04 */ u32 accumulatedExp:21; //Same as above, but with exp.
+    /* 0x06 */ u32 isReverse:1; //Reverse Mode status.
+    /* 0x06 */ u32 snagFlag:1; //Set when catching from another trainer, so that the mon is given to you after winning. Unset afterward.
+    /* 0x06 */ u32 filler:9;
+    /* 0x08 */
     /* 0x09 */ 
     /* size = 10 */
         

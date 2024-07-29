@@ -77,8 +77,6 @@ struct TrainerMon
     bool8 gigantamaxFactor:1;
     bool8 shouldDynamax:1;
     bool8 shouldTerastal:1;
-    u8 boostLevel;
-    u8 shadowAggro;
     u8 shadowID;
     u16 heartGauge;
 };
