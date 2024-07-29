@@ -2348,13 +2348,16 @@ u8 CreateNPCTrainerPartyFromTrainer(struct Pokemon *party, const struct Trainer 
             levelBoost = 0;
             if (partyData[i].isShadow)
             {
-                bool8 shad = TRUE;
-                SetMonData(&party[i], MON_DATA_IS_SHADOW, &shad);
-                SetMonData(&party[i], MON_DATA_SHADOW_ID, &partyData[i].shadowID);
-                SetMonData(&party[i], MON_DATA_SHADOW_AGGRO, &partyData[i].shadowAggro);
-                levelBoost = partyData[i].boostLevel;
+                bool8 isShadow = TRUE;
+                bool8 reverseMode = FALSE;
+                bool8 snagFlag = FALSE;
+                u8 shadowID = SHADOW_LIST_GENERIC_1; //Placeholder until dynamic Shadow List switching is implemented
+                SetMonData(&party[i], MON_DATA_IS_SHADOW, &isShadow);
+                SetMonData(&party[i], MON_DATA_SHADOW_ID, &shadowID);
+                SetMonData(&party[i], MON_DATA_REVERSE_MODE, &reverseMode);
+                SetMonData(&party[i], MON_DATA_SNAGGED, &snagFlag);
                 SetMonData(&party[i], MON_DATA_HEART_VALUE, &partyData[i].heartGauge);
-                SetMonData(&party[i], MON_DATA_HEART_MAX, &partyData[i].heartGauge);
+                levelBoost = GetMonData(&party[i], MON_DATA_BOOST_LEVEL);
             }
             else if (partyData[i].nickname != NULL)
             {

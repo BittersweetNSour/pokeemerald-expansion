@@ -5,6 +5,7 @@
 #include "constants/items.h"
 #include "constants/region_map_sections.h"
 #include "constants/map_groups.h"
+#include "constants/shadow_pokemon.h"
 #include "contest_effect.h"
 
 #define GET_BASE_SPECIES_ID(speciesId) (GetFormSpeciesId(speciesId, 0))
@@ -122,6 +123,12 @@ enum {
     MON_DATA_SNAGGED,
     MON_DATA_HEART_VALUE,
     MON_DATA_HEART_MAX,
+    MON_DATA_IS_XD,
+    MON_DATA_BOOST_LEVEL,
+    MON_DATA_PURIFY_MOVE_1,
+    MON_DATA_PURIFY_MOVE_2,
+    MON_DATA_PURIFY_MOVE_3,
+    MON_DATA_PURIFY_MOVE_4,
 };
 
 struct PokemonSubstruct0
@@ -248,14 +255,13 @@ union __attribute__((packed, aligned(2))) NicknameShadowdata
     u8 nickname[min(10, POKEMON_NAME_LENGTH)];
     struct Shadowdata
     {
-    /* 0x00 */ u16 heartValue;
-    /* 0x02 */ u16 heartMax;
-    /* 0x04 */ u8 shadowID;
-    /* 0x05 */ u8 shadowAggro:3; //Determines chance to enter Reverse Mode
-    /* 0x05 */ u8 isXD:1; //for Shadow Lugia's special case
-    /* 0x05 */ u8 isReverse:1;
-    /* 0x05 */ u8 snagFlag:1; //Set when catching from another trainer, so that the mon is given to you after winning. Unset afterward.
-    /* 0x05 */ u8 filler:2;
+    /* 0x00 */ u8 shadowID; //Identifies the Pokemon on the Shadow List; since many properties of Shadows are constants, they can simply be looked up in the list rather than stored in this union.
+    /* 0x01 */ u16 heartValue; //The current Heart Gauge value; the maximum is a constant, so it does not need to be stored here.
+    /* 0x03 */ u8 isReverse:1; //Reverse Mode status.
+    /* 0x03 */ u8 snagFlag:1; //Set when catching from another trainer, so that the mon is given to you after winning. Unset afterward.
+    /* 0x03 */ u8 filler:6;
+    /* 0x04 */ 
+    /* 0x05 */ 
     /* 0x06 */ 
     /* 0x07 */ 
     /* 0x08 */ 
@@ -263,6 +269,16 @@ union __attribute__((packed, aligned(2))) NicknameShadowdata
     /* size = 10 */
         
     } shadowData;
+};
+
+struct ShadowMonInfo
+{
+    u16 heartMax;
+    u16 purifyMoves[MAX_MON_MOVES];
+    bool8 isXD : 1;          //for Shadow Lugia's special case
+    u8 boostLevel : 2;       //Determines how much the Pokemon's stats are boosted before you can catch them
+    u8 shadowAggro : 3;      //Determines chance to enter Reverse Mode
+    u8 filler : 2;
 };
 
 enum {
@@ -392,13 +408,11 @@ struct BattlePokemon
     /*0x59*/ u8 metLevel;
     /*0x5A*/ bool8 isShiny;
     /*0x5B*/ u8 isShadow:1;
-    /*0x5B*/ u8 shadowAggro:3;
     /*0x5B*/ u8 isReverse:1;
-    /*0x5B*/ u8 snagged:1;
-    /*0x5B*/ u8 filler:3;
+    /*0x5B*/ u8 snagFlag:1;
+    /*0x5B*/ u8 filler:5;
     /*0x5C*/ u8 shadowID;
-    /*0x5D*/ u16 heartVal;
-    /*0x5F*/ u16 heartMax;
+    /*0x5D*/ u16 heartGauge;
 };
 
 struct Evolution
@@ -685,6 +699,7 @@ extern const s8 gNatureStatTable[][5];
 extern const u8 gShadowAggressionTable[][6];
 extern const u32 sExpCandyExperienceTable[];
 extern const struct Ability gAbilitiesInfo[];
+extern const struct ShadowMonInfo gShadowPokemonInfo[];
 
 void ZeroBoxMonData(struct BoxPokemon *boxMon);
 void ZeroMonData(struct Pokemon *mon);
@@ -745,6 +760,7 @@ u32 GetMonData3(struct Pokemon *mon, s32 field, u8 *data);
 u32 GetMonData2(struct Pokemon *mon, s32 field);
 u32 GetBoxMonData3(struct BoxPokemon *boxMon, s32 field, u8 *data);
 u32 GetBoxMonData2(struct BoxPokemon *boxMon, s32 field);
+u32 GetShadowMonConstants(u8 shadowID, s32 field);
 
 void SetMonData(struct Pokemon *mon, s32 field, const void *dataArg);
 void SetBoxMonData(struct BoxPokemon *boxMon, s32 field, const void *dataArg);
@@ -866,7 +882,7 @@ void HealBoxPokemon(struct BoxPokemon *boxMon);
 const u8 *GetMoveName(u16 moveId);
 u8 GetHeartGaugeSection(u16 heartVal, u16 heartMax);
 u8 GetReverseModeChance(struct BattlePokemon *mon);
-u8 ShdwCanMonGainEXP(struct Pokemon *mon);
+u8 CanShadowMonGainEXP(struct Pokemon *mon);
 u16 ModifyHeartValueInBattle(u8 battlerId, u16 amount);
 u8 CheckPartyShadow(struct Pokemon *party, u8 selection);
 

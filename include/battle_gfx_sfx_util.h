@@ -44,7 +44,7 @@ bool32 ShouldPlayNormalMonCry(struct Pokemon *mon);
 extern const struct SpritePalette gSpritePalettes_HealthBoxHealthBar[10];
 
 // Shadow Pokemon
-void ShdwLoadHealthboxSprite(void);
-void ShdwLoadHealthboxPalette(u8 battlerId);
+void ShadowLoadHealthboxSprite(void);
+void ShadowLoadHealthboxPalette(u8 battlerId);
 
 #endif // GUARD_BATTLE_GFX_SFX_UTIL_H

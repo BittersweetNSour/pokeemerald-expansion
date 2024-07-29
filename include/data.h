@@ -158,6 +158,8 @@ extern const struct Trainer gBattlePartners[];
 
 extern const struct TrainerClass gTrainerClasses[TRAINER_CLASS_COUNT];
 
+extern const struct TrainerMon gShadowTrainerMon[];
+
 static inline u16 SanitizeTrainerId(u16 trainerId)
 {
     if (trainerId >= TRAINERS_COUNT)

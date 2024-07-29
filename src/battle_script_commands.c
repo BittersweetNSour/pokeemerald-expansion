@@ -4296,7 +4296,7 @@ static void Cmd_getexp(void)
 
             for (i = 0; i < PARTY_SIZE; i++)
             {
-                if (!IsValidForBattle(&gPlayerParty[i]) || !ShdwCanMonGainEXP(&gPlayerParty[i]))
+                if (!IsValidForBattle(&gPlayerParty[i]) || !CanShadowMonGainEXP(&gPlayerParty[i]))
                     continue;
                 if (gBitTable[i] & sentInBits)
                     viaSentIn++;
@@ -4399,7 +4399,7 @@ static void Cmd_getexp(void)
                     gBattleStruct->wildVictorySong++;
                 }
 
-                if (IsValidForBattle(&gPlayerParty[*expMonId]) && ShdwCanMonGainEXP(&gPlayerParty[*expMonId]))
+                if (IsValidForBattle(&gPlayerParty[*expMonId]) && CanShadowMonGainEXP(&gPlayerParty[*expMonId]))
                 {
                     if (wasSentOut)
                         gBattleMoveDamage = GetSoftLevelCapExpValue(gPlayerParty[*expMonId].level, gBattleStruct->expValue);
@@ -4486,7 +4486,7 @@ static void Cmd_getexp(void)
         if (gBattleControllerExecFlags == 0)
         {
             gBattleResources->bufferB[gBattleStruct->expGetterBattlerId][0] = 0;
-            if (GetMonData(&gPlayerParty[*expMonId], MON_DATA_HP) && GetMonData(&gPlayerParty[*expMonId], MON_DATA_LEVEL) != MAX_LEVEL && ShdwCanMonGainEXP(&gPlayerParty[*expMonId]))
+            if (GetMonData(&gPlayerParty[*expMonId], MON_DATA_HP) && GetMonData(&gPlayerParty[*expMonId], MON_DATA_LEVEL) != MAX_LEVEL && CanShadowMonGainEXP(&gPlayerParty[*expMonId]))
             {
                 gBattleResources->beforeLvlUp->stats[STAT_HP]    = GetMonData(&gPlayerParty[*expMonId], MON_DATA_MAX_HP);
                 gBattleResources->beforeLvlUp->stats[STAT_ATK]   = GetMonData(&gPlayerParty[*expMonId], MON_DATA_ATK);

@@ -545,13 +545,22 @@ void Script_SetStatus1(struct ScriptContext *ctx)
     }
 }
 
-void CreateScriptedWildShadowMon(u16 species, u8 level, u16 item, u16 heartValue)
+void CreateScriptedWildShadowMon(u16 species, u8 level, u16 item, u8 shadowID)
 {
     u8 heldItem[2];
     u8 isShadow = 1;
+    u16 heartValue = GetShadowMonConstants(shadowID, MON_DATA_HEART_MAX);
+    struct TrainerMon *shadowMon = &gShadowTrainerMon[shadowID];
 
     ZeroEnemyPartyMons();
-    CreateMon(&gEnemyParty[0], species, level, USE_RANDOM_IVS, 0, 0, OT_ID_PLAYER_ID, 0);
+    if (shadowID > SHADOW_LIST_GENERIC)
+    {
+        CreateMon(&gEnemyParty[0], species, level, USE_RANDOM_IVS, 0, 0, OT_ID_PLAYER_ID, 0);
+    }
+    else
+    {
+        CreateMon(&gEnemyParty[0], shadowMon->species, shadowMon->lvl, USE_RANDOM_IVS, 0, 0, OT_ID_PLAYER_ID, 0);
+    }
     if (item)
     {
         heldItem[0] = item;
@@ -559,45 +568,67 @@ void CreateScriptedWildShadowMon(u16 species, u8 level, u16 item, u16 heartValue
         SetMonData(&gEnemyParty[0], MON_DATA_HELD_ITEM, heldItem);
     }
     SetMonData(&gEnemyParty[0], MON_DATA_IS_SHADOW, &isShadow);
-    SetMonData(&gEnemyParty[0], MON_DATA_HEART_MAX, &heartValue);
+    SetMonData(&gEnemyParty[0], MON_DATA_SHADOW_ID, SHADOW_LIST_GENERIC_1);
     SetMonData(&gEnemyParty[0], MON_DATA_HEART_VALUE, &heartValue);
 }
 
-// heartValue args can take 0 to make the left/right mon not shadow
-void CreateScriptedDoubleWildShadowMon(u16 species1, u8 level1, u16 item1, u16 heartValue1, u16 species2, u8 level2, u16 item2, u16 heartValue2)
+// shadowID args can take 0 to make the left/right mon not shadow
+void CreateScriptedDoubleWildShadowMon(u16 species1, u8 level1, u16 item1, u8 shadowID1, u16 species2, u8 level2, u16 item2, u8 shadowID2)
 {
     u8 heldItem1[2];
     u8 heldItem2[2];
     u8 isShadow = 1;
+    u16 heartValue[2] = 
+    {
+        GetShadowMonConstants(shadowID1, MON_DATA_HEART_MAX), GetShadowMonConstants(shadowID2, MON_DATA_HEART_MAX)
+    };
+    struct TrainerMon *shadowMon[2] = 
+    {
+        &gShadowTrainerMon[shadowID1],
+        &gShadowTrainerMon[shadowID2]
+    };
     
 
     ZeroEnemyPartyMons();
+    if ((shadowID1 > SHADOW_LIST_GENERIC) || (shadowID1 = 0))
+    {
 
-    CreateMon(&gEnemyParty[0], species1, level1, 32, 0, 0, OT_ID_PLAYER_ID, 0);
+        CreateMon(&gEnemyParty[0], species1, level1, 32, 0, 0, OT_ID_PLAYER_ID, 0);
+        if (shadowID1 > 0)
+        {
+            SetMonData(&gEnemyParty[0], MON_DATA_IS_SHADOW, &isShadow);
+            SetMonData(&gEnemyParty[0], MON_DATA_HEART_VALUE, &heartValue[0]);
+        }
+    }
+    else
+    {
+        CreateMon(&gEnemyParty[0], shadowMon[0]->species, shadowMon[0]->lvl, USE_RANDOM_IVS, 0, 0, OT_ID_PLAYER_ID, 0);
+    }
     if (item1)
     {
         heldItem1[0] = item1;
         heldItem1[1] = item1 >> 8;
         SetMonData(&gEnemyParty[0], MON_DATA_HELD_ITEM, heldItem1);
     }
-    if (heartValue1)
-    {
-        SetMonData(&gEnemyParty[0], MON_DATA_IS_SHADOW, &isShadow);
-        SetMonData(&gEnemyParty[0], MON_DATA_HEART_MAX, &heartValue1);
-        SetMonData(&gEnemyParty[0], MON_DATA_HEART_VALUE, &heartValue1);
-    }
 
-    CreateMon(&gEnemyParty[3], species2, level2, 32, 0, 0, OT_ID_PLAYER_ID, 0);
+    if ((shadowID2 > SHADOW_LIST_GENERIC) || (shadowID2 = 0))
+    {
+
+        CreateMon(&gEnemyParty[3], species2, level2, 32, 0, 0, OT_ID_PLAYER_ID, 0);
+        if (shadowID2 > 0)
+        {
+            SetMonData(&gEnemyParty[3], MON_DATA_IS_SHADOW, &isShadow);
+            SetMonData(&gEnemyParty[3], MON_DATA_HEART_VALUE, &heartValue[1]);
+        }
+    }
+    else
+    {
+        CreateMon(&gEnemyParty[3], shadowMon[1]->species, shadowMon[1]->lvl, USE_RANDOM_IVS, 0, 0, OT_ID_PLAYER_ID, 0);
+    }
     if (item2)
     {
         heldItem2[0] = item2;
         heldItem2[1] = item2 >> 8;
         SetMonData(&gEnemyParty[3], MON_DATA_HELD_ITEM, heldItem2);
-    }
-    if (heartValue2)
-    {
-        SetMonData(&gEnemyParty[3], MON_DATA_IS_SHADOW, &isShadow);
-        SetMonData(&gEnemyParty[3], MON_DATA_HEART_MAX, &heartValue2);
-        SetMonData(&gEnemyParty[3], MON_DATA_HEART_VALUE, &heartValue2);
     }
 }

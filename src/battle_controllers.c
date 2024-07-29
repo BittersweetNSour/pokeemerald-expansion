@@ -1602,12 +1602,10 @@ static u32 GetBattlerMonData(u32 battler, struct Pokemon *party, u32 monId, u8 *
         battleMon.otId = GetMonData(&party[monId], MON_DATA_OT_ID);
         battleMon.metLevel = GetMonData(&party[monId], MON_DATA_MET_LEVEL);
         battleMon.isShadow = GetMonData(&party[monId], MON_DATA_IS_SHADOW);
-        battleMon.shadowAggro = GetMonData(&party[monId], MON_DATA_REVERSE_MODE);
-        battleMon.isReverse = GetMonData(&party[monId], MON_DATA_SHADOW_AGGRO);
-        battleMon.snagged = GetMonData(&party[monId], MON_DATA_SNAGGED);
         battleMon.shadowID = GetMonData(&party[monId], MON_DATA_SHADOW_ID);
-        battleMon.heartVal = GetMonData(&party[monId], MON_DATA_HEART_VALUE);
-        battleMon.heartMax = GetMonData(&party[monId], MON_DATA_HEART_MAX);
+        battleMon.isReverse = GetMonData(&party[monId], MON_DATA_REVERSE_MODE);
+        battleMon.heartGauge = GetMonData(&party[monId], MON_DATA_HEART_VALUE);
+        battleMon.snagFlag = GetMonData(&party[monId], MON_DATA_SNAGGED);
         GetMonData(&party[monId], MON_DATA_NICKNAME, nickname);
         StringCopy_Nickname(battleMon.nickname, nickname);
         GetMonData(&party[monId], MON_DATA_OT_NAME, battleMon.otName);
@@ -1871,6 +1869,10 @@ static u32 GetBattlerMonData(u32 battler, struct Pokemon *party, u32 monId, u8 *
         dst[0] = GetMonData(&party[monId], MON_DATA_IS_SHADOW);
         size = 1;
         break;
+    case REQUEST_SHADOW_ID_BATTLE:
+        dst[0] = GetMonData(&party[monId], MON_DATA_SHADOW_ID);
+        size = 1;
+        break;
     case REQUEST_REVERSE_MODE_BATTLE:
         dst[0] = GetMonData(&party[monId], MON_DATA_REVERSE_MODE);
         size = 1;
@@ -1879,8 +1881,8 @@ static u32 GetBattlerMonData(u32 battler, struct Pokemon *party, u32 monId, u8 *
         dst[0] = GetMonData(&party[monId], MON_DATA_HEART_VALUE);
         size = 1;
         break;
-    case REQUEST_HEART_MAX_BATTLE:
-        dst[0] = GetMonData(&party[monId], MON_DATA_HEART_MAX);
+    case REQUEST_SNAG_FLAG_BATTLE:
+        dst[0] = GetMonData(&party[monId], MON_DATA_SNAGGED);
         size = 1;
         break;
     }
@@ -1900,6 +1902,8 @@ static void SetBattlerMonData(u32 battler, struct Pokemon *party, u32 monId)
         {
             u8 iv;
             u8 isShadow;
+            u8 isReverse;
+            u8 snagFlag;
 
             SetMonData(&party[monId], MON_DATA_SPECIES, &battlePokemon->species);
             SetMonData(&party[monId], MON_DATA_HELD_ITEM, &battlePokemon->item);
@@ -1935,6 +1939,12 @@ static void SetBattlerMonData(u32 battler, struct Pokemon *party, u32 monId)
             SetMonData(&party[monId], MON_DATA_SPDEF, &battlePokemon->spDefense);
             isShadow = battlePokemon->isShadow;
             SetMonData(&party[monId], MON_DATA_IS_SHADOW, &isShadow);
+            SetMonData(&party[monId], MON_DATA_SHADOW_ID, &battlePokemon->shadowID);
+            isReverse = battlePokemon->isReverse;
+            SetMonData(&party[monId], MON_DATA_HEART_VALUE, &battlePokemon->heartGauge);
+            SetMonData(&party[monId], MON_DATA_REVERSE_MODE, &isReverse);
+            snagFlag = battlePokemon->snagFlag;
+            SetMonData(&party[monId], MON_DATA_SNAGGED, &snagFlag);
         }
         break;
     case REQUEST_SPECIES_BATTLE:
@@ -2107,14 +2117,17 @@ static void SetBattlerMonData(u32 battler, struct Pokemon *party, u32 monId)
     case REQUEST_IS_SHADOW_BATTLE:
         SetMonData(&party[monId], MON_DATA_IS_SHADOW, &gBattleResources->bufferA[battler][3]);
         break;
+    case REQUEST_SHADOW_ID_BATTLE:
+        SetMonData(&party[monId], MON_DATA_SHADOW_ID, &gBattleResources->bufferA[battler][3]);
+        break;
     case REQUEST_REVERSE_MODE_BATTLE:
         SetMonData(&party[monId], MON_DATA_REVERSE_MODE, &gBattleResources->bufferA[battler][3]);
         break;
     case REQUEST_HEART_VALUE_BATTLE:
         SetMonData(&party[monId], MON_DATA_HEART_VALUE, &gBattleResources->bufferA[battler][3]);
         break;
-    case REQUEST_HEART_MAX_BATTLE:
-        SetMonData(&party[monId], MON_DATA_HEART_MAX, &gBattleResources->bufferA[battler][3]);
+    case REQUEST_SNAG_FLAG_BATTLE:
+        SetMonData(&party[monId], MON_DATA_SNAGGED, &gBattleResources->bufferA[battler][3]);
         break;
     }
 

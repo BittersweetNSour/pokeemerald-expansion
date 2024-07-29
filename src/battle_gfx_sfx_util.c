@@ -105,7 +105,7 @@ const struct SpritePalette gSpritePalettes_HealthBoxHealthBar[10] =
     /* 9 */ {gBattleInterface_ShadowMenuPal, TAG_HEALTHBOX_OPPONENT2_PAL},
 };
 
-void ShdwLoadHealthboxPalette(u8 battlerId)
+void ShadowLoadHealthboxPalette(u8 battlerId)
 {
     u8 palNum;
     u8 isShadow;
@@ -143,7 +143,7 @@ void ShdwLoadHealthboxPalette(u8 battlerId)
         UpdateHealthboxAttribute(gHealthboxSpriteIds[battlerId], mon, HEALTHBOX_STATUS_ICON);
 }
 
-void ShdwLoadHealthboxSprite(void)
+void ShadowLoadHealthboxSprite(void)
 {
     u8 isShadow = GetMonData(&gPlayerParty[gBattlerPartyIndexes[GetBattlerAtPosition(0)]], MON_DATA_IS_SHADOW);
     FreeSpriteTilesByTag(TAG_HEALTHBOX_PLAYER1_TILE);
@@ -760,13 +760,13 @@ bool8 BattleLoadAllHealthBoxesGfx(u8 state)
                 if (gBattleTypeFlags & BATTLE_TYPE_SAFARI)
                     LoadCompressedSpriteSheet(&sSpriteSheet_SafariHealthbox);
                 else
-                    ShdwLoadHealthboxSprite();
-                ShdwLoadHealthboxPalette(0);
+                    ShadowLoadHealthboxSprite();
+                ShadowLoadHealthboxPalette(0);
             }
             else if (state == 3)
             {
                 LoadCompressedSpriteSheet(&sSpriteSheet_SinglesOpponentHealthbox);
-                ShdwLoadHealthboxPalette(1);
+                ShadowLoadHealthboxPalette(1);
             }
             else if (state == 4)
                 LoadCompressedSpriteSheet(&sSpriteSheets_HealthBar[GetBattlerPosition(0)]);
@@ -782,24 +782,24 @@ bool8 BattleLoadAllHealthBoxesGfx(u8 state)
                 if (WhichBattleCoords(0))
                     LoadCompressedSpriteSheet(&sSpriteSheets_DoublesPlayerHealthbox[0]);
                 else
-                    ShdwLoadHealthboxSprite();
+                    ShadowLoadHealthboxSprite();
 
-                ShdwLoadHealthboxPalette(0);
+                ShadowLoadHealthboxPalette(0);
             }
             else if (state == 3)
             {
                 LoadCompressedSpriteSheet(&sSpriteSheets_DoublesPlayerHealthbox[1]);
-                ShdwLoadHealthboxPalette(2);
+                ShadowLoadHealthboxPalette(2);
             }
             else if (state == 4)
             {
                 LoadCompressedSpriteSheet(&sSpriteSheets_DoublesOpponentHealthbox[0]);
-                ShdwLoadHealthboxPalette(1);
+                ShadowLoadHealthboxPalette(1);
             }
             else if (state == 5)
             {
                 LoadCompressedSpriteSheet(&sSpriteSheets_DoublesOpponentHealthbox[1]);
-                ShdwLoadHealthboxPalette(3);
+                ShadowLoadHealthboxPalette(3);
             }
             else if (state == 6)
                 LoadCompressedSpriteSheet(&sSpriteSheets_HealthBar[GetBattlerPosition(0)]);
