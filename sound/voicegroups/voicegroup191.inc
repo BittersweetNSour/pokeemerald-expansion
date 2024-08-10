@@ -1,5 +1,5 @@
 	.align 2
-voicegroup158::
+voicegroup191::
 	voice_keysplit_all voicegroup002
 	voice_keysplit voicegroup005, KeySplitTable1
 	voice_square_1 60, 0, 0, 2, 0, 0, 15, 0
@@ -80,8 +80,8 @@ voicegroup158::
 	voice_square_1 60, 0, 0, 2, 0, 0, 15, 0
 	voice_directsound 60, 0, DirectSoundWaveData_sd90_classical_whistle, 255, 0, 255, 127
 	voice_square_1 60, 0, 0, 2, 0, 0, 15, 0
-	voice_square_1_alt 60, 0, 0, 1, 0, 1, 9, 0
-	voice_square_2_alt 60, 0, 3, 0, 1, 10, 1
+	voice_square_2_alt 60, 0, 3, 0, 1, 7, 6
+	voice_square_1_alt 60, 0, 0, 3, 0, 1, 7, 6
 	voice_square_1 60, 0, 0, 2, 0, 0, 15, 0
 	voice_square_2_alt 60, 0, 2, 1, 0, 9, 1
 	voice_programmable_wave_alt 60, 0, ProgrammableWaveData_6, 0, 7, 15, 0
